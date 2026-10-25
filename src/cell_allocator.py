@@ -1,10 +1,9 @@
 """
 Cell allocator -- variable-length rows, best-fit placement, fragmentation.
 
-A logical entry is not a fixed-size object: a long prefix needs several rows, a
-short one needs few. Deleting a long entry leaves a hole of that exact size, and
-holes of irregular size are hard to reuse. This module models the placement side
-of the problem so the width trade-off can be measured instead of guessed.
+A long prefix takes several rows, a short one fewer. Deleting a long entry
+leaves a hole of that size, and holes of irregular size are hard to reuse.
+The width trade-off below is measured on this placement model.
 """
 
 from math import ceil
@@ -90,9 +89,9 @@ class CellAllocator:
 def simulate(key_lens, cell_bits, total_rows, churn=0.4, seed=11):
     """Place a workload with insert/delete churn, then report what fits.
 
-    Pure insertion never creates holes, so fragmentation stays at zero and the
-    comparison is meaningless. Real tables churn: entries are deleted while
-    others are added, and the leftover holes have irregular sizes.
+    Insertion alone leaves no holes, so fragmentation stays at zero. Tables in
+    use churn: entries are deleted while others are added, and the holes left
+    behind have irregular sizes.
     """
     import random as _random
 
@@ -111,7 +110,7 @@ def simulate(key_lens, cell_bits, total_rows, churn=0.4, seed=11):
         start = a.alloc(n)
         if start is None:
             failed += 1
-            # free rows exist but are not contiguous -- this is the real cost
+            # free rows exist but none of them is contiguous with the rest
             if a.free_rows() >= n:
                 blocked += 1
             return
@@ -182,4 +181,4 @@ if __name__ == "__main__":
     print("\ncolumns:")
     print("  avg_span  anchor rows per entry")
     print("  bit_util  useful bits / allocated bits")
-    print("  blocked   insert failed while enough free rows existed, just not contiguous")
+    print("  blocked   insert failed although enough free rows existed, none contiguous")

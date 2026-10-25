@@ -3,8 +3,8 @@ Prefix generators for workload simulation and boundary scanning.
 
 Two different jobs:
   * mixed_workload()  -> length distribution for capacity / width comparison
-  * boundary_cases()  -> addresses sitting exactly on the edges where encoding
-                         and allocation bugs live
+  * boundary_cases()  -> addresses on the length edges where encoding and
+                         allocation errors show up
 """
 
 import random

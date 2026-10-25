@@ -2,10 +2,10 @@
 """
 Address sweep -- differential test.
 
-The expected value never comes from the implementation under test. A naive
-reference matcher walks every prefix and returns the longest hit; the hardware
-model goes through row allocation, anchor/continuation binding and SRAM offsets.
-If the two disagree, the model is wrong.
+Expected values come from a separate naive matcher, not from the model under
+test. The reference walks every prefix and returns the longest hit; the model
+runs row allocation, anchor/continuation binding and SRAM offsets. When the two
+disagree, the model is wrong.
 
 Run:
     python tests/test_sweep.py
@@ -28,7 +28,7 @@ from prefix_gen import boundary_cases, BOUNDARY_V4, BOUNDARY_V6, random_prefix  
 # ---------------------------------------------------------------- reference
 
 def ref_lookup(prefixes, addr):
-    """Naive longest prefix match: O(n), obviously correct, used as oracle."""
+    """Naive longest prefix match. O(n), used as the reference."""
     best = None
     for p in prefixes:
         if (addr & p["mask"]) == p["key"]:
