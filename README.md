@@ -2,4 +2,4 @@
 
 ![LPM 查表流水线](docs/images/lookup-pipeline.svg)
 
-设计细节见 [docs/architecture.md](docs/architecture.md)，验证方法见 [docs/test-method.md](docs/test-method.md)。
+项目说明见 [docs/LPM_INTRODUCTION.md](docs/LPM_INTRODUCTION.md)。
