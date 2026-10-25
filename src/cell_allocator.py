@@ -179,8 +179,7 @@ if __name__ == "__main__":
             r["cell_bits"], r["inserted"], r["avg_span"],
             r["avg_bit_util"], r["blocked"], r["failed"]))
 
-    print("\nread it this way:")
-    print("  avg_span  -> anchor rows per entry; larger means more arbitration load")
-    print("  bit_util  -> useful bits / allocated bits; larger is cheaper per entry")
-    print("  blocked   -> failed although enough free rows existed, just not contiguous")
-    print("  no single width wins on all three; pick by which one binds first.")
+    print("\ncolumns:")
+    print("  avg_span  anchor rows per entry")
+    print("  bit_util  useful bits / allocated bits")
+    print("  blocked   insert failed while enough free rows existed, just not contiguous")
