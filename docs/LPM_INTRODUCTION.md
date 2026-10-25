@@ -48,7 +48,7 @@ lpm_top 整体框图：
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│  对外 API 层  ql_lpm_entry_add/read/update/delete      │
+│  对外 API 层  lpm_entry_add/read/update/delete      │
 ├──────────────────────────────────────────────────────┤
 │  软表逻辑层  VRF 树 (logic) + IP 前缀树 (ipbtree)       │
 │             路由的软件真值源 (source of truth)          │
@@ -68,14 +68,14 @@ lpm_top 整体框图：
 
 | 模块 | 位置 | 职责 |
 |------|------|------|
-| IP 前缀树 (ipbtree) | `ql_ipbtree.c` | 软件侧路由真值源，按 VRF 组织的前缀树，支撑查重/增删/镜像重建 |
-| 四阶段动态同步 | `dynamic/ql_lpm_dynamic_hw.c` | `rows_collect`（增量收集）→ `build_image`（构造硬件镜像，含 cell 分裂与 spill 编码）→ `plan_build`（算 diff 计划）→ `commit_hitless`（命中无损提交：SRAM2 stage → SRAM1 → TCAM → release） |
-| 静态压缩编码 | `ql_lpm_static_compress.c`、`ql_lpm_remote_static_v4/v6.c` | 整表一次性规划：前缀分组聚合、bcont 链聚合、REMOTE 叶打包 |
-| 位级序列化 | `dynamic/ql_lpm_serialize.c` | 硬件字段按位宽/位偏移 LSB-first 打包，处理大小端转换 |
+| IP 前缀树 (ipbtree) | `ipbtree.c` | 软件侧路由真值源，按 VRF 组织的前缀树，支撑查重/增删/镜像重建 |
+| 四阶段动态同步 | `dynamic/lpm_dynamic_hw.c` | `rows_collect`（增量收集）→ `build_image`（构造硬件镜像，含 cell 分裂与 spill 编码）→ `plan_build`（算 diff 计划）→ `commit_hitless`（命中无损提交：SRAM2 stage → SRAM1 → TCAM → release） |
+| 静态压缩编码 | `lpm_static_compress.c`、`lpm_remote_static_v4/v6.c` | 整表一次性规划：前缀分组聚合、bcont 链聚合、REMOTE 叶打包 |
+| 位级序列化 | `dynamic/lpm_serialize.c` | 硬件字段按位宽/位偏移 LSB-first 打包，处理大小端转换 |
 | 表格式代码生成 | `stub/gen_alg.js` + `lpm_table.json` | 硬件字段位宽/位偏移定义在 JSON，构建时生成 alg 层代码；表格式改动只需改 JSON |
-| 硬件抽象 (write_func) | `ql_lpmhw_table.c/h` | 每张硬表挂一个写函数指针，动态后端与真机驱动走同一入口；真机移植替换挂接层（`dynamic/ql_lpm_dynamic_hw_backend_port.c`） |
-| 查表仿真器 (lkpsim) | `sim/`、`stub/ql_lpm_sim.c` | 主机侧模拟硬件查表（g_lpm_tcam/sram1/sram2/remote 全局数组），下发后可回读验证，配合 pcap 报文注入做端到端验证 |
-| 测试框架 | `test/`、`lkpsimtest.c` | 用例安装器（`test_v4/v6_*`）+ 查表向量比对（`ql_lkpsim_lpm_run_vectors_*`）+ 性能基准（`ql_hw_write_rate_test`） |
+| 硬件抽象 (write_func) | `lpmhw_table.c/h` | 每张硬表挂一个写函数指针，动态后端与真机驱动走同一入口；真机移植替换挂接层（`dynamic/lpm_dynamic_hw_backend_port.c`） |
+| 查表仿真器 (lkpsim) | `sim/`、`stub/lpm_sim.c` | 主机侧模拟硬件查表（g_lpm_tcam/sram1/sram2/remote 全局数组），下发后可回读验证，配合 pcap 报文注入做端到端验证 |
+| 测试框架 | `test/`、`lkpsimtest.c` | 用例安装器（`test_v4/v6_*`）+ 查表向量比对（`lkpsim_lpm_run_vectors_*`）+ 性能基准（`hw_write_rate_test`） |
 
 ### 3.3 hitless 提交
 
@@ -84,15 +84,15 @@ lpm_top 整体框图：
 ## 4. 目录速览
 
 ```
-├── ql_lpm.c/.h               对外 API 与表创建
-├── ql_lpm_desc.h             LPM 描述符 (desc + hwctx + 硬件镜像)
-├── ql_lpmhw_table.c/.h       硬件表定义 / write_func 注册 / entry 读写
-├── ql_lpm_hw_data.c/.h       硬件数据结构 (bcam_node/bcam_list)
-├── ql_lpm_logic.c/.h         软表 VRF 逻辑树
-├── ql_ipbtree.c/.h           IP 前缀树
-├── ql_lpm_static_compress.c  STATIC 本地编码
-├── ql_lpm_remote_static_v4/v6.c  STATIC 远端编码
-├── dynamic/                  DYNAMIC 全部代码（核心：ql_lpm_dynamic_hw.c）
+├── lpm.c/.h               对外 API 与表创建
+├── lpm_desc.h             LPM 描述符 (desc + hwctx + 硬件镜像)
+├── lpmhw_table.c/.h       硬件表定义 / write_func 注册 / entry 读写
+├── lpm_hw_data.c/.h       硬件数据结构 (bcam_node/bcam_list)
+├── lpm_logic.c/.h         软表 VRF 逻辑树
+├── ipbtree.c/.h           IP 前缀树
+├── lpm_static_compress.c  STATIC 本地编码
+├── lpm_remote_static_v4/v6.c  STATIC 远端编码
+├── dynamic/                  DYNAMIC 全部代码（核心：lpm_dynamic_hw.c）
 ├── sim/                      查表仿真算法（用户提供）
 ├── stub/                     仿真桩、探针、构建脚本（gen_alg.js / build*.sh）
 ├── test/                     测试用例、回归、性能基准、pcap 数据
@@ -111,7 +111,7 @@ node stub/gen_alg.js
 bash stub/build_lkpsimtest.sh
 
 # 3. 硬表下发速率基准（TCAM/SRAM1/SRAM2/REMOTE 各 2k 条）
-#    ql_hw_write_rate_test 为框架形态入口，由测试框架传入 desc 调用
+#    hw_write_rate_test 为框架形态入口，由测试框架传入 desc 调用
 ```
 
 环境：MinGW gcc + Node.js，真机为 Linux（同一套代码，底层接口挂接真机驱动）。
